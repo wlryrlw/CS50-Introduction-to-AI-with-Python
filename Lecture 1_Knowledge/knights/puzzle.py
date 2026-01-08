@@ -17,7 +17,7 @@ knowledge0 = And(
     Or(AKnight, AKnave), # A is a knight or a knave
     Or(BKnight, BKnave), # B is a knight or a knave
     # The following text has the same annotations as above.
-
+    
     Biconditional(AKnight, And(AKnight, AKnave))
 )
 
