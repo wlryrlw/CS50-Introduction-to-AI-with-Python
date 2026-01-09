@@ -11,5 +11,5 @@ Course Homepage: https://cs50.harvard.edu/ai/
 
 This repository includes:
 - Code from Lecture 0 to Lecture 6.
-- The PDF version of the official website Notes.
+- The PDF version of the official handouts.
 - Personal study notes.
