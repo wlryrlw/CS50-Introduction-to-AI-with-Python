@@ -94,7 +94,6 @@ def sample_pagerank(corpus, damping_factor, n):
     pages = list(corpus.keys())
     counts = {p: 0 for p in pages}
 
-    # Start with a page at random
     current = random.choice(pages)
     counts[current] += 1
 
@@ -121,10 +120,8 @@ def iterate_pagerank(corpus, damping_factor):
     n_pages = len(pages)
     threshold = 0.001
 
-    # Initialize pagerank uniformly
     ranks = {p: 1 / n_pages for p in pages}
 
-    # Precompute incoming links for each page
     incoming = {p: set() for p in pages}
     for p in pages:
         for linked in corpus[p]:
@@ -134,15 +131,13 @@ def iterate_pagerank(corpus, damping_factor):
         new_ranks = dict()
 
         for p in pages:
-            # Base random jump factor
             rank = (1 - damping_factor) / n_pages
 
-            # Summation over pages that link to p
             total = 0
             for i in incoming[p]:
                 num_links = len(corpus[i])
                 if num_links == 0:
-                    # Sink page contributes evenly to all pages
+                    
                     total += ranks[i] / n_pages
                 else:
                     total += ranks[i] / num_links
@@ -150,13 +145,11 @@ def iterate_pagerank(corpus, damping_factor):
             rank += damping_factor * total
             new_ranks[p] = rank
 
-        # Check convergence
         deltas = [abs(new_ranks[p] - ranks[p]) for p in pages]
         ranks = new_ranks
         if max(deltas) < threshold:
             break
 
-    # Normalize (defensive) so values sum exactly to 1
     s = sum(ranks.values())
     return {p: ranks[p] / s for p in pages}
 
