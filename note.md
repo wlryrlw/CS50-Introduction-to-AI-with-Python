@@ -1,0 +1,655 @@
+# Lecture 0_搜索
+
+## 搜索
+寻找问题的解决方案，即给定初始状态和目标状态，返回如何从前者到达后者的解决方案
+
+**Agent**
+**代理**，感知环境并对环境采取行动的实体
+
+**State**
+**状态**，代理在环境中的配置
+
+**Initial State**
+**初始状态**，搜索算法开始的状态
+
+**Actions**
+**行为**，在某个状态下可以做出的选择
+定义为函数 Actions(s)：状态s为输入，返回可以在状态中执行的操作集
+
+**Transition Model**
+**过渡模型**，对在某状态下执行某种操作所产生的状态的描述
+定义为函数Results(s,a)：状态s和操作a作为输入，返回在状态s中执行操作a所产生的状态
+
+**State Space**
+**状态空间**，从初始状态可到达的所有状态的集合，可视化为有向图
+
+**Goal Test**
+**目标测试**，确定给定状态是否为目标状态
+
+**Path Cost**
+**路径成本**，与给定路径相关的数字成本
+
+## 解决搜索问题
+**Solution**
+**解决方案**，从初始状态到目标状态的一系列操作
+**Optimal Solution**
+**最优解**，所有解决方案中路径成本最低的解决方案
+
+**Node**
+搜索过程中的数据存储在**节点**中，包括：
+    - **State**：一个**状态**
+    - **Parent Node**：它的**父节点**
+    - **Action**：一个**操作**，能从父节点的状态到达当前节点状态
+    - **Path Cost**：从初始节点到此节点的**路径成本**
+
+**Frontier**
+**边界**，一种管理节点的机制，其包含一个初始状态和一个表示探索项的空集合，重复以下操作直到问题解决：
+> 1. 如果边界为空：停止。此时问题没有解决方案。
+> 2. 从边界中移除一个节点（这个节点是将要被考虑的节点）
+> 3. 如果节点包含目标状态：得到解决方案，停止循环。
+> 否则：
+>       1. 找到从该节点可以到达的所有新节点，并将结果添加到边界
+>       2. 将当前节点添加到已探索的集合中
+
+### Depth-First Search (DFS)
+**深度优先搜索**，尝试另一个方向之前会耗尽每个方向
+
+优点：在最优情况下，算法是最快的
+缺点：找到的解决方案可能不是最佳的；在最坏的情况下，该算法将在找到解决方案之前探索每条可能的路径，故在达到解决方案之前花费了尽可能长(as long as possible)的时间
+
+使用**栈**作为数据结构。将节点添加到边界后，要删除和考虑的第一个节点是最后添加的节点。
+```Python
+# Define the function that removes a node from the frontier and returns it.
+ def remove(self):
+    # Terminate the search if the frontier is empty which means there is no solution 
+    if self.empty():
+        raise Exception("empty frontier")
+    else:
+        # Save the last item in the list (which is the newest node added)
+        node = self.frontier[-1]
+        # Remove the last node 
+        self.frontier = self.frontier[:-1]
+        return node
+```
+
+### Breadth-First Search (BFS)
+**广度优先搜索**，同时遵循多个方向，在每个可能的方向上迈出一步，然后再在每个方向上迈出第二步
+
+优点： 一定能找到最优解
+缺点：几乎无法达到最短时间；在最坏的情况下，该算法需要尽可能长的时间来运行。
+
+使用**队列**作为数据结构，将节点添加到边界后，要删除和考虑的第一个节点是最先添加的节点。
+```Python
+   # Define the function that removes a node from the frontier and returns it.
+    def remove(self):
+    	# Terminate the search if the frontier is empty which means there is no solution 
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+            # Save the oldest item on the list (which was the first one to be added)
+            node = self.frontier[0]
+            # Remove the first node
+            self.frontier = self.frontier[1:]
+            return node
+```
+
+### Greedy Best-First Search
+**贪心最佳优先搜索**，先搜索扩展最接近目标的节点。
+
+- **无信息搜索算法**：一类没有通过自己的探索获得有关问题信息的算法
+    - 深度优先搜索
+    - 广度优先搜索
+- **知情搜索算法**：一类考虑额外信息来尝试提高其性能的算法
+
+**启发式函数h(n)**：
+估计下一个节点与目标的接近程度，以决定先扩展哪个节点，决定着贪婪最佳优先搜索的效率。
+可能会出错从而导致算法比其他情况更慢。
+在迷宫问题中依赖**曼哈顿距离**，即忽略墙壁计算从一个位置到目标位置需要向上下左右迈出多少步，也即两点横纵坐标差的绝对值之和。
+
+### A* Search
+**A\* 搜索**，贪婪最佳优先算法的发展，更准确地确定解决方案的成本并实时优化其选择
+
+包括：
+- **h(n)**：启发式函数，从当前位置到目标的路径成本。
+    - **Admissible**：永远不高估真实成本
+    - **Consistent**：当前节点的路径成本不大于下一个节点的路径成本加上到下一个节点的成本，即**h(n) ≤ h(n') + c**
+- **g(n)**：到当前位置的累积成本
+
+该算法会跟踪两个函数值的和，一旦超过某个先前选项的估计成本，该算法将放弃当前路径并返回到先前的选项，从而防止自己沿着一条漫长而低效的路径行走
+
+在某些情况下，它的效率可能会低于贪婪的最佳优先搜索或其他算法
+
+### Adversarial Search
+对抗性搜索，即AI试图实现相反目标。以井字棋（tic tac toe）为例
+
+#### 数学化
+**玩家**
+MAX(X)：目标最大化得分
+MIN(O)：目标最小化得分
+
+**游戏结果**
+1分 —— X胜
+0分 —— 平局
+-1分 —— O胜
+
+**函数**
+$S_0$：初始状态，即一个空的3×3棋盘
+Player(s)：一个函数，输入状态S，返回到达回合的玩家
+Action(s)：一个函数，输入状态S，返回该状态下的所有合法动作
+Result(S, a)：一个函数，输入状态S和操作a，返回在状态S上执行操作a所产生的新状态
+Terminal(S)：一个函数，输入状态S，若有人获胜或平局则返回True，否则返回False
+Utility(S)：一个函数，输入状态S，返回该状态的最终值：-1、0或1
+
+#### 如何工作
+##### 以井字棋为例
+![0_井字棋树.jpg](https://wlry-1323998276.cos.ap-nanjing.myqcloud.com/llm/202512281924972.jpg)
+
+递归地模拟从当前状态开始直到最终状态为止可能发生的所有情况。 
+算法在最小化得分和最大化得分之间交替，为每个可能的操作所产生的状态创建值。如最大化玩家问：“我采取这个行动会产生一个新的状态。如果最小化玩家要达到最佳效果，他会采取什么行动来达到最低值？”最小化玩家同理。最终，通过递归推理，最大化玩家得出当前状态下所有可能的动作产生的值，随后选择最高的值
+
+##### 以一般对抗游戏为例
+![0_对抗游戏树.jpg](https://wlry-1323998276.cos.ap-nanjing.myqcloud.com/llm/202512281934599.jpg)
+
+对于一般的对抗游戏，伪代码表示如下：
+```python
+#给定一个状态S，目标最大化玩家在Action(S)中选择一个动作a，使Min_value(Result(s, a))的值最大
+def Max_value(S)：
+    if Terminal(S):
+        return Utility(S)
+    v = - ∞
+    for a in Action(S):
+        v = max(v, Min_value(Result(S, a)))
+    return v
+
+#目标最小化玩家在Action(S)中选择一个动作a，使Max_value(Result(s, a))的值最小
+def Min_value(S)：
+    if Terminal(S):
+        return Utility(S)
+    v = + ∞
+    for a in Action(S):
+        v = min(v, Max_value(Result(S, a)))
+    return v
+``` 
+
+#### Alpha-Beta Pruning
+*Alpha-Beta剪枝*，一种MiniMax算法的优化方法。在确定一个操作的价值后，如果有证据表明后续操作使对手得到的分数比已有操作使对手得到的分数更好，则无需进一步考察该操作，因为它肯定不如之前建立的那个操作有利。
+![0_剪枝.jpg](https://wlry-1323998276.cos.ap-nanjing.myqcloud.com/llm/202512281933806.jpg)
+
+#### Depth-Limited Minimax
+*深度限制的MiniMax算法*，在停止之前仅考虑预定的移动次数，而不会到达最终状态。
+
+**评估函数**：
+根据给定状态估计游戏的预期值
+以国际象棋为例，将当前棋盘状态作为输入，基于每个玩家拥有的棋子及其在棋盘上的位置，返回一个正值或负值，以代表一名玩家相对于另一名玩家的有利程度，这些值用于决定操作
+评估函数的性能好坏决定着依赖它的MiniMax算法的好坏
+
+
+# Lecture 1_知识
+
+**Knowledge-Based Agents**
+*知识型代理*，通过对知识内部的表示进行操作来推理
+**Sentence**
+*句子*，是知识表示语言中关于世界的断言（在程序中的一阶逻辑），是人工智能存储知识并使用其来推断新信息的方式
+
+## 命题逻辑
+Propositional Symbols：*命题符号*，用于表示命题的字母
+
+Logical Connectives：*逻辑联结词*，连接命题符号的逻辑符号
+
+### 非(¬)
+**Not**，反转命题的真值
+
+|P|¬P|
+|:--:|:--:|
+|true|false|
+|false|true|
+
+### 与(∧)
+**And**，连接两个不同的命题，命题都为真时才为真
+
+|P|Q|P∧Q|
+|:--:|:--:|:--:|
+|true|true|true|
+|true|false|false|
+|false|true|false|
+|false|false|false|
+
+### 或(∨)
+**Or**，只要其中一个参数为真，它就为真
+
+|P|Q|P∨Q|
+|:--:|:--:|:--:|
+|true|true|true|
+|true|false|true|
+|false|true|true|
+|false|false|false|
+
+### 蕴含(→)
+**Implication**，若 P 则 Q，P 称前件，Q 称后件
+前件为真时，后件为真，蕴含式为真；后件为假，蕴含式为假
+前件为假时，蕴含式永远为真（显然成立）
+
+| P | Q | P→Q |
+| :--: | :--: | :--: |
+| true | true | true |
+| true | false | false |
+| false | * | true |
+
+### 等价(↔)
+**Biconditional**，即“当且仅当”
+
+|P|Q|P↔Q|
+|:--:|:--:|:--:|
+|true|true|true|
+|true|false|false|
+|false|true|false|
+|false|false|true|
+
+### Model
+**模型**，为每一个命题分配一个值（真或假）
+
+### Knowledge Base (KB)
+**知识库**，一个知识型代理所知道的一组句子。这些句子是 AI 以命题逻辑句子的形式提供的关于世界的知识，可以用来对世界进行额外的推理
+
+### 蕴涵(⊨)
+**Entailment**,根据已知的知识和逻辑规则，通过推理得出新的结论或信息
+α ⊨ β：若 α 为真，则 β 也为真
+
+> 蕴含(Implication) 是连接两个命题的逻辑联结词
+> 蕴涵(Entailment) 是一个关系，意味着如果α中的所有信息都是真的，则β中的所有信息也是真的
+
+## 推理
+从旧句子推导出新句子的过程
+
+**Query α**
+*α查询*：α是否为真、KB 是否蕴含α。
+
+### 模型检查算法
+
+- 1.枚举所有可能的模型
+- 2.如果在每个 KB 为真的模型中，α 也为真，则 KB ⊨ α
+	- Step 1：枚举所有可能模型
+	- Step 2：检查每个模型，并根据知识库检查它是否正确
+
+例：
+P: It is a Tuesday. Q: It is raining. R: Harry will go for a run.
+KB: (P ∧ ¬Q) → R  , P , ¬Q
+Query: R
+
+|P|Q|R|KB|
+|:--:|:--:|:--:|:--:|
+|false|false|false|false|
+|false|false|true|false|
+|false|true|false|false|
+|false|true|true|false|
+|true|false|false|false|
+|==true==|==false==|==true==|==true==|
+|true|true|false|false|
+|true|true|true|false|
+
+在每个 KB 为真的模型中，α（例中为 R）为真，故 KB ⊨ R 成立
+
+```python
+def check_all(knowledge, query, symbols, model):
+
+# If model has an assignment for each symbol
+# (The logic below might be a little confusing: we start with a list of symbols. The function is recursive, and every time it calls itself it pops one symbol from the symbols list and generates models from it. Thus, when the symbols list is empty, we know that we finished generating models with every possible truth assignment of symbols.)
+if not symbols:
+
+    # If knowledge base is true in model, then query must also be true
+    if knowledge.evaluate(model):
+        return query.evaluate(model)
+    return True
+else:
+
+    # Choose one of the remaining unused symbols
+    remaining = symbols.copy()
+    p = remaining.pop()
+
+    # Create a model where the symbol is true
+    model_true = model.copy()
+    model_true[p] = True
+
+    # Create a model where the symbol is false
+    model_false = model.copy()
+    model_false[p] = False
+
+    # Ensure entailment holds in both models
+```
+
+`check_all`是递归的，它选择一个符号，创建两个模型，其中一个模型中该符号为真，另一个模型中该符号为假，然后再次调用自身。该函数会不断重复此过程，直到所有符号在模型中都被赋予真值，导致列表为 symbols 空
+一旦列表为空（如代码行所示 if not symbols），在函数的每个实例中（每个实例都包含不同的模型），该函数都会检查知识库 (KB) 在该模型下是否为真。如果知识库在该模型下为真，则该函数会检查查询是否为真
+
+## 知识工程
+Knowledge Engineering，指在人工智能中如何表示命题和逻辑的过程
+
+## 推理规则
+|推理规则|已知|推论|
+|:---:|:---:|:---:|
+|命题演算分离|α→β,α|β|
+|合取消去|α∧β|α|
+|双重否定|¬(¬α)|α
+|蕴含消去|α→β|¬α∨β
+|等价消去|α↔β|(α→β)∧(β↔α)
+|德摩根律|¬(α∧β)|¬α∨¬β
+|分配率|α∨(β∧γ)|(α∨β)∧(α∨γ)
+
+## 归结算法
+### 生成 CNF
+**析取**：由 “或” 连接的命题
+**合取**：由 “与” 连接的命题
+
+**子句**：文字、命题符号的析取
+**合取范式 CNF**：子句的合取；任何逻辑语句都可以转换为 CNF
+
+**生成合取范式**：
+消除等价：α↔β 变为 (α→β)∧(β→α)
+消除蕴含：(α→β) 变为 ¬α∨β
+否定向内移动：¬(α∧β) 变为 ¬α∨¬β
+
+### 归结
+互补文字：两个相同的原子命题，其中一个被否定，而另一个不被否定，例如 P 和 ¬P
+
+如果“或”命题中的两个子命题之一为假，则另一个命题必然为真
+即，已知：P∨Q，¬P ，则：Q
+
+特殊的，¬P 和 P 进行归结会得到空子句（始终为假）
+一般的，先生成 CNF，后进行归结
+
+
+# Lecture 2_不确定性
+## 基本概念
+**可能的情况**：ω
+$0 < P(ω) < 1$
+$\Sigma P(ω) = 1$
+
+**无条件概率**：
+在没有任何其他证据的情况下，对某个命题的相信程度
+
+**有条件概率**：
+$P(a|b)=\frac{P(a∧b)}{P(b)}$
+
+**随机变量**
+
+**独立性**：
+一个事件的发生不会影响另一个事件发生的概率
+$P(a∧b) = P(a)P(b)$
+
+**联合概率与边缘概率**
+
+**容斥原理**：
+$P(a∨b) = P(a) + P(b) - P(a∧b)$
+
+## 贝叶斯网络
+**贝叶斯公式**： $P(b|a)=\frac{P(a|b)P(b)}{P(a)}$
+
+![image.png](https://wlry-1323998276.cos.ap-nanjing.myqcloud.com/llm/202601212014623.png)
+
+定向图，每个节点代表一个随机变量
+从 X 指向 Y 的箭头表示 X 是 Y 的父节点，Y 的概率分布取决于 X 的值
+每个节点 X 都有概率分布 $P(X|Parents(X))$
+
+### 推理
+查询 X：要计算其概率分布的变量
+证据变量 E ：针对事件 e 观测到的一个或多个变量
+隐藏变量 Y：既不是查询变量，也没有被观测到的变量
+目标：计算 $P(X|e)$
+
+$P(x|e)= \alpha P(x,e) = \alpha \Sigma_y P(X,e,y)$
+
+### 采样
+每个变量都根据其概率分布被抽取一个值
+
+### 似然加权采样
+传统的“拒绝采样”中，舍弃了与现有证据不符的样本，效率低下
+
+1. 强行固定：
+	遇到证据变量（比如“火车准点”）时，不进行随机采样
+2. 采样：
+	对于非证据变量（比如“天气”、“是否维护”），依然按照贝叶斯网络的概率分布采样
+3. 计算权重：
+	因为“强行”让证据变量发生了，这个样本可能并不符合自然的概率分布，为了修正这个偏差，要计算一个权重 $w=P(e|Parents(e))$ ，代表了在当前采样出的环境下，这个证据发生的可能性有多大
+
+
+## 马尔科夫模型
+描述“事件序列”的数学模型，未来的状态只取决于当前的状态，而与过去的状态无关
+
+### 马尔科夫链
+**马尔科夫假设**：
+当前状态仅取决于有限个固定数量的先前状态
+下一步跳到哪，只取决于现在踩在哪个格子里，即$$P(X_{t+1} | X_t, X_{t-1}, \dots, X_0) = P(X_{t+1} | X_t)$$
+
+**状态转移矩阵**：
+描述了从一个状态移动到另一个状态的“概率规则”
+
+|Today|Sun|Rain|
+|:---:|---|---|
+|**Sun**|0.8|0.2|
+|**Rain**|0.3|0.7|
+
+在这个例子中，今天晴天，明天晴天的概率为 0.8；今天下雨，明天下雨的概率为 0.7
+不断向后“采样”，生成一串天气序列（如：晴 -> 晴 -> 雨 -> 雨 -> 晴），这就是一条马尔可夫链
+
+### 隐马尔可夫链
+隐状态层：想知道、但无法直接观察到的真实情况，如是否下雨
+观测层：能看到的数据或证据，如室内的人带不带伞
+
+通过观测层，反推背后隐藏的隐状态层
+
+**传感器马尔可夫假设**：
+在任何时刻 $t$ ，观测值 $E_t$ 只取决于当前的隐状态 $X_t$ ，而与过去的隐状态或过去的观测值无关，即 $$P(E_t | X_t, X_{t-1}, \dots, X_0, E_{t-1}, \dots, E_0) = P(E_t | X_t)$$
+
+||带伞|不带伞|
+|:---:|---|---|
+|**Sun**|0.2|0.8|
+|**Rain**|0.9|0.1|
+
+- 过滤：
+	- 给定从一开始到现在的观测数据，计算当前状态的概率分布
+	- 例如，给定从一开始到今天人们何时带伞的信息，我们可以生成今天是否下雨的概率分布
+- 预测：
+	- 根据从开始到现在的观测结果，计算未来状态的概率分布
+- 平滑处理：
+	- 给定从开始到现在的观测数据，计算过去状态的概率分布
+	- 例如，已知今天有人带了伞，计算昨天下雨的概率
+- 最可能的解释：
+	- 根据从开始到现在的观察结果，计算出最可能的事件顺序
+
+
+# Lecture 3_优化
+从一组可能的选项中选择最佳选项
+
+## 局部搜索 Local Search
+维护单个节点并通过移动到相邻节点进行搜索的搜索算法，会找到一个并非最优但“足够好”的答案
+
+- **目标函数**：最大化解的值
+- **成本函数**：最小化解决成本
+- **当前状态**：函数当前正在考虑的状态
+- **邻近状态**：当前状态可以转换到的状态，如当前状态两侧的状态
+
+### 爬山算法
+在迷雾中登山的人，看不清远处的山顶，只能看清脚下的一小块地方。为了登上顶峰，只要旁边的地势比现在高，就往那边走一步
+
+1. **观察**：看看当前位置周围的所有邻居的状态
+2. **比较**：寻找是否有比当前状态更好的邻居
+	- 如果是求最大值（如利润），找更高的点
+	- 如果是求最小值（如成本），找更低的点
+3. **移动**： 如果找到了更好的邻居，就跳过去，然后重复第 1 步；如果没有更好的，就停在原地，结束
+
+存在的问题：
+局部最优不等于全局最优
+四周的高度都一样，算法不知道该往哪走，只能原地打转或直接停止
+![image.png](https://wlry-1323998276.cos.ap-nanjing.myqcloud.com/llm/202601251233973.png)
+
+### 爬山算法变体
+**最陡上升**：
+检查所有邻居，选那个最好的
+
+**随机爬山**：
+在所有比现在好的邻居里，随机选一个，有机会避开某些局部陷阱
+
+**首选爬山**：
+只要发现第一个比现在好的邻居，立刻跳过去
+适合邻居极多的情况，省算力
+
+**随机重启**：
+多试几次，每次从随机位置开始爬，最有机会找到真正的最高点
+
+**局部束搜索**：
+同时派 k 个人一起爬，人多力量大，信息共享
+
+### 模拟退火算法
+爬山算法 + 以一定的概率接受一个更差的解
+
+1. 随机选个邻居：看看旁边的点
+2. 如果邻居更好：直接跳过去（跟爬山算法一样）
+3. 如果邻居更差：满足概率 $e^{\Delta E/T}$ 时，依然跳过去
+
+$\Delta E$ ：邻近区域比当前区域好多少倍
+$T$ ：温度，早期 $T$ 更大，后期更小
+
+> 旅行商问题：去 10 个城市送货，怎么走路径最短？
+> - 暴力计算： 10 个城市有超过 360 万种走法
+> - 模拟退火： 先随便给一个路径，然后随机交换两个城市的顺序，如果新路径变短了，采纳；如果新路径变长了，在初期（高温度）也有可能采纳，以此避开那些看起来不错但其实不是最短的路线
+
+
+## 线性规划 Linear Programming
+优化线性方程的问题
+
+包括：
+- 最小化的成本函数：$c₁x₁ + c₂x₂ + … + cₙxₙ$ 
+	- 每个 $x₋$ 都是一个变量，并且与某个成本 $c₋$ 相关联
+- 约束条件： $a₁x₁ + a₂x₂ + … + aₙxₙ ≤ b$ 或 $a₁x₁ + a₂x₂ + … + aₙxₙ = b$ 
+	- 可以表示为变量之和，其值小于或等于某个特定值
+	- 每个 $x₋$ 是一个变量， $a₋$ 是与其关联的资源， $b$ 是可以分配给此问题的资源量
+- 对变量设定个别界限： $lᵢ ≤ xᵢ ≤ uᵢ$
+
+
+## 约束满足 CSP
+满足约束的条件下给变量赋值的问题
+
+包括：
+- 变量集合 ( $x_1, x_2, \dots, x_n$ )： 需要填空的那些对象
+- 域集合 ( $D_1, D_2, \dots, D_n$ )： 每个空位可以填入的选择范围，如数字 1-9，或周一到周五
+- 约束集合 ( $C$ )：必须遵守的规则，规定了哪些变量组合是合法的，哪些是不行的
+
+> 排考场问题：
+> 学生 1-4 各自选修了 A、B、…、G 中的三门课程，每门课程都需要考试，考试日期可选星期一、星期二和星期三，但同一个学生不能在同一天参加两场考试
+> 
+> 约束图：图中的每个节点代表一门课程，如果两门课程不能安排在同一天，则在它们之间画一条边
+> ![image.png](https://wlry-1323998276.cos.ap-nanjing.myqcloud.com/llm/202601251558899.png)
+
+硬约束：必须满足，否则方案无效
+软约束：尽量满足，代表了偏好
+
+一元约束：只涉及一个变量的约束，如课程 A 不能在星期一进行考试 { A ≠ 星期一}
+二元约束：涉及两个变量的约束，如某两个课程不能具有相同的值 { A ≠ B }
+
+### 节点一致性
+变量域中的所有值都满足该变量的一元约束
+
+> 如，A 的域集合为 {星期一, 星期二, 星期三}，约束条件是 {A ≠ 星期一}，则 A 不满足节点一致性
+> A 的域集合改为 {星期二, 星期三}，则 A 满足节点一致性
+
+### 弧一致性
+变量域中的所有值都满足该变量的二元约束，即对于变量 $X$ 和 $Y$ ，如果 $X$ 域的每一个选项，都能在 $Y$ 的值域里找到至少一个能配对的选项，则 $X$ 对 $Y$ 是弧一致的
+
+> 如， A 的值域：{周二, 周三}， B 的值域：{周三}，约束： A≠B
+> 检查 A 对 B 的一致性：如果 A=周二，B 可以选周三；如果 A=周三，B 没得选了
+> 结果： 把“周三”从 A 的名单里删掉，现在 A={周二} ，A 对 B 达到了弧一致
+
+验证一对节点具有弧一致性：
+```python
+def Revise(csp, X, Y):
+	revised = false
+	
+	# 遍历变量 X 变量集合中的每一个值 x
+	for x in X.domain:
+	    # 检查变量Y的变量集合中是否存在一个值 y 能够满足(X, Y)的约束
+	    if no y in Y.domain satisfies constraint for (X, Y):
+	        delete x from X.domain
+	        revised = true
+	        
+	return revised
+```
+
+验证整个问题具有弧一致性：
+```python
+def AC_3(csp):
+	# 初始化一个队列，包含 CSP 中所有的弧（变量之间的连线）
+	queue = all arcs in csp
+	
+	while queue is not empty:
+	    # 从队列中取出一个弧 (X, Y)
+	    (X, Y) = Dequeue(queue)
+	    
+	    # 调用 Revise 函数来检查并修正 X 对 Y 的一致性
+	    if Revise(csp, X, Y):
+	        # 如果 X 的定义域变空了，说明此题无解
+	        if size of X.domain == 0:
+	            return false
+	        
+	        # X 的值减少了，所有受 X 影响的邻居 Z 都需要重新入队检查
+	        for each Z in X.neighbors - {Y}:
+	            Enqueue(queue, (Z, X))
+	            
+	return true
+```
+
+### 回溯搜索
+1. 检查： 所有的空都填好了吗？填好了就成功返回
+2. 选择： 挑一个还没填值的变量
+3. 尝试： 遍历这个变量所有可能的选项：
+	1. 如果这个值和已经填好的值不冲突，就把它填上
+	2. 带着这个新填的值去填剩下的空
+		- 如果后续的尝试成功，大功告成
+		- 如果后续尝试失败，就把刚才填的值擦掉（回溯），试下一个选项
+4. 失败： 如果所有选项都试过了都不行，说明前面的步骤出错了，向上一级报告失败
+
+```python
+def backtrack(assignment, csp):
+	# 如果任务完成：返回分配
+	if len(assignment) == len(csp.variables):
+	    return assignment
+	
+	# 挑选一个还没有被赋值的变量
+	var = select_unassigned_var(assignment, csp)
+	# 尝试该变量定义域中的每一个可能取值
+	for value in csp.domains[var]:
+	    # 如果值与赋值一致：检查这个值是否违反了与邻居之间的约束
+	    if is_consistent(var, value, assignment, csp):
+	        assignment[var] = value
+	        # 带着新的赋值进入递归，继续尝试为下一个变量赋值
+	        result = backtrack(assignment, csp)
+	
+	        # 如果结果 ≠ 失败：返回结果
+	        if result is not None:
+	            return result
+	
+	        # 从赋值语句中移除
+	        del assignment[var]
+	
+	# 返回失败
+	return None
+```
+
+#### 带推理的回溯搜索
+回溯搜索时维护弧一致性
+
+每次给一个变量赋值后，立刻运行一次 AC-3 
+
+#### 启发式回溯搜索
+##### 选哪个节点
+###### 最小剩余值 MRV
+优先选剩余选择最少的节点
+
+如果某个空只剩一个数字能填了，那就先填它！万一它会导致失败，我们能越早发现越好
+
+###### 度数启发式
+优先选约束最多（度最多的节点）的节点
+
+搞定那个“刺头”，剩下的问题往往迎刃而解
+
+##### 选哪个值
+###### 最少限制值 LCV
+选择对其他变量约束最小的变量
